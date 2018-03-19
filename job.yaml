@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kbuild-demo
+spec:
+  template:
+    spec:
+      containers:
+      - name: init-static
+        image: gcr.io/priya-wadhwa/executor:latest
+        command: ["/kbuild/executor",  "--context=kbuild-demo", "--destination=gcr.io/priya-wadhwa/kbuild:example", "--dockerfile=/workspace/Dockerfile"]
+        volumeMounts:
+          - name: dockerfile-volume
+            mountPath: /workspace/
+          - name: kbuild-secret
+            mountPath: /secret
+        env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /secret/kbuild-secret.json
+      restartPolicy: Never
+      volumes:
+        - name: dockerfile-volume
+          configMap:
+            name: dockerfile-config
+            items:
+              - key: Dockerfile
+                path: Dockerfile
+        - name: kbuild-secret
+          secret:
+            secretName: kbuild-secret
